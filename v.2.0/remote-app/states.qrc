@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>states/back_center.png</file>
+        <file>states/back_left.png</file>
+        <file>states/back_right.png</file>
+        <file>states/forward_center.png</file>
+        <file>states/forward_left.png</file>
+        <file>states/forward_right.png</file>
+        <file>states/stop_center.png</file>
+        <file>states/stop_left.png</file>
+        <file>states/stop_right.png</file>
+        <file>states/disabled.png</file>
+    </qresource>
+</RCC>

@@ -6,4 +6,4 @@ Written with QT 5.2
 
 #### Usage
 - Choose port in "Connect" menu.
-- Press control RC car by WSAD keys.
+- Control RC car by pressing WSAD keys.

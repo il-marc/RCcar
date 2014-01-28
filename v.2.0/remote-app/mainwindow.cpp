@@ -10,17 +10,24 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    DownA = 0;
-    DownW = 0;
-    DownS = 0;
-    DownD = 0;
-    turn = 0;
-    move = 0;
+    downA = false;
+    downW = false;
+    downS = false;
+    downD = false;
+    turn = CENTER;
+    move = STOP;
     connected = false;
-    ui->setupUi(this);
-    timer = new QTimer(this);
 
-    connect(timer, SIGNAL(timeout()), this, SLOT(measureVoltage()));
+    ui->setupUi(this);
+
+    //waitingVoltage = false;
+    //waitingSpeed = false;
+
+    voltageTimer = new QTimer(this);
+    speedTimer = new QTimer(this);
+
+    connect(voltageTimer, SIGNAL(timeout()), this, SLOT(measureVoltage()));
+    connect(speedTimer, SIGNAL(timeout()), this, SLOT(measureSpeed()));
 
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         ui->plainTextEdit->appendHtml("<p><b>Serial</b> : Detected "+
@@ -30,11 +37,12 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(newAct, SIGNAL(triggered()), this, SLOT(serialConnect()));
         ui->menuPort->addAction(newAct);
     }
+    //connect(ui->menuDiconnect, SIGNAL(triggered(QAction*)), this, SLOT(serialDisconnect()));
+    //ui->menuDiconnect->setDisabled(true);
     stateProcess();
 }
 void MainWindow::serialConnect()
 {
-    ui->menuPort->setDisabled(true);
     ui->plainTextEdit->appendHtml("<p><b>Serial</b> : Connecting "+((QAction *)sender())->text()+"</p>");
     serial = new QSerialPort (this);
     serial->setPortName(((QAction *)sender())->text());
@@ -46,9 +54,13 @@ void MainWindow::serialConnect()
                 && serial->setStopBits(QSerialPort::OneStop)
                 && serial->setFlowControl(QSerialPort::SoftwareControl)) {
             ui->plainTextEdit->appendHtml("<p style='color:green'><b>Serial</b> : Connected!</p>");
+            ui->menuPort->setDisabled(true);
+            //ui->menuDiconnect->setEnabled(true);
             connected = true;
             connect(serial, SIGNAL(readyRead()), this, SLOT(getSerialMessage()));
-            timer->start(1000);
+            voltageTimer->start(1000);
+            //speedTimer->start(100);
+            stateProcess();
         } else {
             serial->close();
             ui->plainTextEdit->appendHtml("<p><b>Serial</b> : Open error: "+ serial->errorString() + "</p>");
@@ -59,75 +71,86 @@ void MainWindow::serialConnect()
         ui->menuPort->setEnabled(true);
     }
 }
+void MainWindow::serialDisconnect() {
+    ui->menuPort->setEnabled(true);
+    //ui->menuDiconnect->setDisabled(false);
+    connected = false;
+    serial->close();
+}
 
 void MainWindow::stateProcess()
 {
     if (connected) {
-        if (DownW ^ DownS) {
-            if(DownW) {
-                if (move != 1) {
-                    move = 1;
-                    serial->putChar(FORWARD);
+        if (downW ^ downS) {
+            if(downW) {
+                if (move != FORWARD) {
+                    move = FORWARD;
+                    serial->putChar(COMMAND_FORWARD);
+                    serial->putChar(motorSpeed);
                     ui->plainTextEdit->appendHtml("<p><b>Control</b> : Forward</p>");
                 }
             } else {
-                if (move != -1) {
-                    move = -1;
-                    serial->putChar(BACKWARD);
+                if (move != BACKWARD) {
+                    move = BACKWARD;
+                    serial->putChar(COMMAND_BACKWARD);
+                    serial->putChar(motorSpeed);
                     ui->plainTextEdit->appendHtml("<p><b>Control</b> : Backward</p>");
                 }
             }
         } else {
-            if (move != 0) {
-                move = 0;
-                serial->putChar(STOP);
+            if (move != STOP) {
+                move = STOP;
+                serial->putChar(COMMAND_STOP);
+                serial->putChar(0);
                 ui->plainTextEdit->appendHtml("<p><b>Control</b> : Stop</p>");
             }
         }
-        if (DownA ^ DownD) {
-            if(DownA) {
-                if (turn != -1 ) {
-                    turn = -1;
-                    serial->putChar(LEFT);
+        if (downA ^ downD) {
+            if(downA) {
+                if (turn != LEFT ) {
+                    turn = LEFT;
+                    serial->putChar(COMMAND_TURN);
+                    serial->putChar(leftPos);
                     ui->plainTextEdit->appendHtml("<p><b>Control</b> : Left</p>");
                 }
             } else {
-                if (turn != 1 ) {
-                    turn = 1;
-                    serial->putChar(RIGHT);
+                if (turn != RIGHT ) {
+                    turn = RIGHT;
+                    serial->putChar(COMMAND_TURN);
+                    serial->putChar(rightPos);
                     ui->plainTextEdit->appendHtml("<p><b>Control</b> : Right</p>");
-
                 }
             }
         } else {
-            if (turn != 0 ) {
-                turn = 0;
-                serial->putChar(CENTER);
+            if (turn != CENTER ) {
+                turn = CENTER;
+                serial->putChar(COMMAND_TURN);
+                serial->putChar(centerPos);
                 ui->plainTextEdit->appendHtml("<p><b>Control</b> : Center</p>");
             }
         }
         QString imageUrl = "background-image: url(:/images/states/";
         switch (move) {
-        case -1:
+        case BACKWARD:
             imageUrl.append("back_");
             break;
-        case 0:
+        case STOP:
             imageUrl.append("stop_");
             break;
-        case 1:
+        case FORWARD:
             imageUrl.append("forward_");
             break;
         default:
             break;
         }
         switch (turn) {
-        case -1:
+        case LEFT:
             imageUrl.append("left.png)");
             break;
-        case 0:
+        case CENTER:
             imageUrl.append("center.png)");
             break;
-        case 1:
+        case RIGHT:
             imageUrl.append("right.png)");
             break;
         default:
@@ -145,16 +168,16 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     if (!event->isAutoRepeat()) {
         switch (event->key()) {
         case Qt::Key_W:
-            DownW = 1;
+            downW = 1;
             break;
         case Qt::Key_S:
-            DownS = 1;
+            downS = 1;
             break;
         case Qt::Key_A:
-            DownA = 1;
+            downA = 1;
             break;
         case Qt::Key_D:
-            DownD = 1;
+            downD = 1;
             break;
         default:
             break;
@@ -167,16 +190,16 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
     if (!event->isAutoRepeat()) {
         switch (event->key()) {
         case Qt::Key_W:
-            DownW = 0;
+            downW = 0;
             break;
         case Qt::Key_S:
-            DownS = 0;
+            downS = 0;
             break;
         case Qt::Key_A:
-            DownA = 0;
+            downA = 0;
             break;
         case Qt::Key_D:
-            DownD = 0;
+            downD = 0;
             break;
         default:
             break;
@@ -186,16 +209,38 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 }
 void MainWindow::measureVoltage()
 {
-    serial->putChar(VOLTAGE);
+    serial->putChar(COMMAND_VOLTAGE);
+    serial->putChar(0);
+}
+void MainWindow::measureSpeed()
+{
+    serial->putChar(COMMAND_SPEED);
+    serial->putChar(0);
 }
 void MainWindow::getSerialMessage()
 {
-    QByteArray msg = serial->readAll();
-    unsigned char v = msg.at(0);
-    if (v != 0) {
-        float voltage = v/(182.0/12.0);
-        ui->lcdNumber_2->display(voltage);
+    //voltageTimer->stop();
+    //speedTimer->stop();
+    //QByteArray msg;
+    if (serial->bytesAvailable() == 3) {
+        QByteArray msg = serial->readAll();
+        switch (msg.at(0)) {
+        case 'S':
+
+            break;
+        case 'V':
+        {
+            char byte = msg.at(1);
+            float voltage = ((unsigned char)byte)/(182.0/12.0);
+            ui->lcdNumber_2->display(voltage);
+            break;
+        }
+        default:
+            ui->plainTextEdit->appendHtml("<p><b>Serial</b> : "+msg+"</p>");
+        }
     }
+    //voltageTimer->start(10000);
+    //speedTimer->start(100);
 }
 
 MainWindow::~MainWindow()

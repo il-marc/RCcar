@@ -7,7 +7,6 @@
 #define COMMAND_TURN     'q'
 #define COMMAND_VOLTAGE  'V'
 #define COMMAND_SPEED    'S'
-#define motorSpeed 60
 #define leftPos 60
 #define centerPos 90
 #define rightPos 120
@@ -38,13 +37,13 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private slots:
-    void serialConnect();
-    void serialDisconnect();
     void measureVoltage();
-    void measureSpeed();
+    void setMotorSpeed();
     void getSerialMessage();
+    void serialError(QSerialPort::SerialPortError);
 
 private:
+    void serialConnect(QString portName);
     void stateProcess();
     QTimer *voltageTimer;
     QTimer *speedTimer;
@@ -56,7 +55,7 @@ private:
     turning turn;
     QSerialPort *serial;
     bool connected;
-
+    unsigned char motorSpeed;
 };
 
 #endif // MAINWINDOW_H

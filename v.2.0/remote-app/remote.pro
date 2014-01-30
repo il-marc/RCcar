@@ -13,11 +13,14 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    portdialog.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    portdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    portdialog.ui
 
 RESOURCES += \
     states.qrc

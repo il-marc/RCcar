@@ -7,8 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>374</width>
-    <height>340</height>
+    <height>272</height>
    </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>272</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>BT Control</string>
@@ -73,12 +79,21 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLCDNumber" name="lcdNumber">
-            <property name="styleSheet">
-             <string notr="true">border:0</string>
+           <widget class="QSlider" name="motorSpeedSlider">
+            <property name="maximum">
+             <number>127</number>
             </property>
-            <property name="segmentStyle">
-             <enum>QLCDNumber::Flat</enum>
+            <property name="singleStep">
+             <number>10</number>
+            </property>
+            <property name="pageStep">
+             <number>30</number>
+            </property>
+            <property name="value">
+             <number>60</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -105,32 +120,9 @@
         </item>
        </layout>
       </item>
-      <item>
-       <widget class="QPlainTextEdit" name="plainTextEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>374</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuPort">
-    <property name="title">
-     <string>Connect</string>
-    </property>
-   </widget>
-   <addaction name="menuPort"/>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

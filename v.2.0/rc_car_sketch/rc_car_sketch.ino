@@ -28,6 +28,7 @@ Servo servo;
 volatile int LState = LOW;
 int motorSpeed;
 int pos;
+long int lastTime;
 // the setup routine runs once when you press reset
 void setup() {
   // bluetooth HC-04 setting up
@@ -40,18 +41,17 @@ void setup() {
   pinMode(DRIVER_INPUT_1, OUTPUT);
   pinMode(DRIVER_INPUT_2, OUTPUT);
   attachInterrupt(0, abort, CHANGE);
+  lastTime = 0;
 }
 // the loop routine runs over and over again forever
 void loop() {
+  if (millis() > lastTime+1000 && lastTime!=0) {
+    brake();
+    lastTime=0;
+  }
   if (Serial.available() == 2) {
+    lastTime = millis();
     char incByte = Serial.read();
-    //КОСТЫЛЬ
-    //При пулчении числа более 128 в буфере появляется 194 или 195
-    if (Serial.peek() == 194 or Serial.peek() == 195)
-    {
-      Serial.read();
-      while (!Serial.available()) {}
-    }
     switch (incByte) {
       case FORWARD_COMMAND:  
         motorSpeed = Serial.read()*2;
@@ -125,6 +125,9 @@ void measureVoltage() {
   Serial.write(VOLTAGE_COMMAND);
   Serial.write(voltageValueByte);
   Serial.write('\0');
+  if (voltageValueByte/(182.0/12.0) < 6.6) {
+    brake();
+  }
 }
 void measureSpeed() {
   Serial.print(SPEED_COMMAND);

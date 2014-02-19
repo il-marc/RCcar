@@ -154,7 +154,7 @@ void MainWindow::stateProcess()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (!event->isAutoRepeat()) {
+    //if (!event->isAutoRepeat()) {
         switch (event->key()) {
         case Qt::Key_W:
             downW = 1;
@@ -172,7 +172,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             break;
         }
         stateProcess();
-    }
+    //}
 }
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {

@@ -29,8 +29,8 @@ public final class R {
     }
     public static final class id {
         public static final int LinearLayout1=0x7f090000;
-        public static final int action_settings=0x7f090004;
         public static final int joystickView1=0x7f090001;
+        public static final int menu_device_select=0x7f090004;
         public static final int seekBar1=0x7f090003;
         public static final int textView1=0x7f090002;
     }
